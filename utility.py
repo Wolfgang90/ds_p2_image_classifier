@@ -8,11 +8,11 @@ def argparse_train():
     parser.add_argument("data_directory", help="set directory to get the data from")
     parser.add_argument("--save_dir", help="set directory to save checkpoints", default = "./")
     parser.add_argument("--arch", help="choose model architecture", default="densenet121")
-    parser.add_argument("--prob_dropout", help="choose dropout probability in hidden layer", default=0.3)
-    parser.add_argument("--learning_rate", help="choose learning rate", default=0.001)
-    parser.add_argument("--hidden_units", help="choose hidden units", default=512)
-    parser.add_argument("--epochs", help="choose epochs", default=10)
-    parser.add_argument('--gpu', action='store_true', default=False, dest='gpu_training', help='set gpu-training to True')
+    parser.add_argument("--prob_dropout",type=float, help="choose dropout probability in hidden layer", default=0.3)
+    parser.add_argument("--learning_rate",type=float , help="choose learning rate", default=0.001)
+    parser.add_argument("--hidden_units", type=int, help="choose hidden units", default=512)
+    parser.add_argument("--epochs", type=int, help="choose epochs", default=10)
+    parser.add_argument('--gpu', action='store_true', default=False, dest='gpu', help='set gpu-training to True')
 
 
     results = parser.parse_args()
@@ -23,7 +23,7 @@ def argparse_train():
     print('learning_rate     = {!r}'.format(results.learning_rate))
     print('hidden_units     = {!r}'.format(results.hidden_units))
     print('epochs     = {!r}'.format(results.epochs))
-    print('gpu_training     = {!r}'.format(results.gpu_training))
+    print('gpu_training     = {!r}'.format(results.gpu))
     
     return results
 
@@ -32,16 +32,16 @@ def argparse_predict():
 
     parser.add_argument("image_path", help="set path to image for prediction")
     parser.add_argument("checkpoint", help="set checkpoint to load the model from")
-    parser.add_argument("--top_k", help="return top K most likely classes", default=5)
+    parser.add_argument("--top_k", type=int, help="return top K most likely classes", default=5)
     parser.add_argument("--category_names", help="use a mapping of categories to real names", default="cat_to_name.json")
-    parser.add_argument('--gpu', action='store_true', default=False, dest='gpu_training', help='set gpu-training to True')
+    parser.add_argument('--gpu', action='store_true', default=False, dest='gpu', help='set gpu-training to True')
 
     results = parser.parse_args()
     print('image_path     = {!r}'.format(results.image_path))
     print('checkpoint     = {!r}'.format(results.checkpoint))
     print('top_k     = {!r}'.format(results.top_k))
     print('category_names     = {!r}'.format(results.category_names))
-    print('gpu_training     = {!r}'.format(results.gpu_training))
+    print('gpu_training     = {!r}'.format(results.gpu))
     
     return results
 

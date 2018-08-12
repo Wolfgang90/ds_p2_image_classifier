@@ -16,11 +16,5 @@ def main():
     model.class_to_idx = image_datasets['train'].class_to_idx
     save_model(model, optimizer)
 
-    #print(model_nn)
-
-
-
-
-
 if __name__ == "__main__":
     main()

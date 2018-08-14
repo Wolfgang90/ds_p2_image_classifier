@@ -14,8 +14,18 @@ def create_model(arch, hidden_units , prob_dropout):
     # To prevent backprop through parameters freeze parameters
     for param in model.parameters():
         param.requires_grad = False
-        
-    input_units = model.classifier.in_features
+      
+    # Determine input units of the selected model         
+    if 'densenet' in arch:
+        input_units = model.classifier.in_features
+    elif arch == 'alexnet':
+        input_units = model.classifier[1].in_features
+    elif 'vgg' in arch:
+        input_units = model.classifier[0].in_features
+    elif 'resnet' in arch:
+        input_units = model.fc.in_features
+    else:
+        raise NameError('The model ' + arch + ' you chose is currently not available in this application. Please check whether you typed your model correctly')
 
     classifier = nn.Sequential(OrderedDict([
         ('fc1', nn.Linear(input_units, hidden_units)),
@@ -26,6 +36,12 @@ def create_model(arch, hidden_units , prob_dropout):
     ]))
 
     model.classifier = classifier
+    
+    # Save additional model parameters
+    model.name = arch
+    model.input_units = input_units
+    model.hidden_units = hidden_units
+    model.prob_dropout = prob_dropout
     
     return model
 
@@ -107,12 +123,17 @@ def train_model(model, trainloader, learning_rate, epochs, gpu, print_every = 40
 def save_model(model, optimizer):
     checkpoint = {'state_dict': model.state_dict(),
                   'class_to_idx': model.class_to_idx,
+                  'name': model.name,
+                  'input_units': model.input_units,
+                  'hidden_units': model.hidden_units,
+                  'prob_dropout': model.prob_dropout,
                   'n_epochs': model.epochs,
                   'optimizer' : optimizer.state_dict}
 
     torch.save(checkpoint, 'checkpoint.pth')
 
     print("model saved to checkpoint.pth")
+    
     
     
 def load_model(checkpoint, gpu): 
@@ -126,22 +147,28 @@ def load_model(checkpoint, gpu):
         checkpoint = torch.load(checkpoint, map_location={'cpu': 'cuda:0'})
     else:
         checkpoint = torch.load(checkpoint, map_location={'cuda:0': 'cpu'})
-    model = models.densenet121(pretrained=True)
+    
+    # Create the identical model
+    model = eval("models." + checkpoint['name'] + "(pretrained=True)")
+    #model = models.densenet121(pretrained=True)
     
     for param in model.parameters():
         param.requires_grad = False
         
+    # Create the classifier
     classifier = nn.Sequential(OrderedDict([
-    ('fc1', nn.Linear(1024, 512)),
+    ('fc1', nn.Linear(checkpoint['input_units'], checkpoint['hidden_units'])),
     ('relu1', nn.ReLU()),
-    ('dropout1', nn.Dropout(0.3)),
-    ('fc2', nn.Linear(512,102)),
+    ('dropout1', nn.Dropout(checkpoint['prob_dropout'])),
+    ('fc2', nn.Linear(checkpoint['hidden_units'],102)),
     ('output', nn.LogSoftmax(dim=1))
     ]))
 
-    model.classifier = classifier
+    if hasattr(model, 'classifier'):
+        model.classifier = classifier
+    elif hasattr(model, 'fc'):
+        model.fc = classifier   
     
-    #model.classifier = checkpoint['model_classifier']
     model.load_state_dict(checkpoint['state_dict'])
     
     model.epochs = checkpoint['n_epochs']    

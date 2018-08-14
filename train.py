@@ -2,8 +2,11 @@ from utility import argparse_train, load_data
 from model import create_model, train_model, save_model
 
 def main():
+    
+    # Get command line input
     results_argparse = argparse_train()
 
+    # Load and transform image data
     image_datasets, dataloaders = load_data(results_argparse.data_directory)
 
     # Create the model
